@@ -1,0 +1,177 @@
+1)
+Type: Syntactic-Semantic Algorithmic Specific ambiguity
+Symptom: Implicit function declaration
+Solution: Forgot to include header file
+Difficulty: Easy
+Time taken: 10 seconds
+
+2)
+Type: -Syntactic -Semantic Algorithmic Specific ambiguity
+Symptom: Failed to convert to binaries
+Solution: Forgot to typecast addresses and magic number definitions to type unsigned int, when operating
+Difficulty: Medium
+Time taken: 20 mins
+
+3)
+Type: Syntactic Semantic -Algorithmic Specific ambiguity
+Symptom: Segmentation fault
+Solution: Used the first address of paging table instead of the appropriate iteration value, which gives the offset
+Difficulty: HIGH
+Time taken: 1 hour
+
+4) 
+Error: Send EOI function for PIC was not working and we were not generating any interrupts.
+Tried: We thought that out IDT is set up incorrectly and we are not initializing properly.
+Solution: We used GDB to check what all bits are being held and whether or not we are masking correctly. We found out that
+we were not cascading properly with master and hence RTC was not working. Moreover, when sending EOI we were not sending the EOI to master
+along with the slave as well
+Time: This took us 2-3 hrs to debug and solve
+
+5)
+Error: Keyboard Interrupts were producing garbage value (garbage characters) on the screen
+Tried: We thought that the error is our incorrect mapping of ASCII values for each of the characters but this wasn't the problem
+Solution: We were not properly mapping the scan codes for keyboard to each of the characters and hence were getting garbage result
+We implemented this and were able to solve the problem quickly
+Time: This took us about an hour to debug
+
+
+6)
+Error: Terminal_write() would output the message plus junk at the end of the message.
+Solution: Terminal_write did not stop writing at a '\0' or '\n' character. So it kept writing junk. A condition check for this case was
+	  added. Instead of writing all n-bytes, terminal_write prints to the screen until 1 of those characters are seen.
+Time: ~1hr
+
+7)
+Error: Keyboard scan codes were not matching the expected values to be outputted.
+Solution: Scancode to ascii mappings were incorrect. Added multiple ascii tables with correct mapping. Scancode and ascii tables have
+	  a 1:1 indexing relationship (i.e. scancode[8] == ascii_table[8]). Included multiple tables for each keycode modifier (shift, ctrl, etc.)
+Time ~ 2hrs
+
+8)
+Error: Cursor locations are not at the end of text after terminal_write/read().
+Solution: correct set_cursor(x, y) calls needed to be made to handle this. 
+Time: ~1hr
+
+9)
+Error: Terminal scrolling kept jumping more than 1 row and previous rows were being lost.
+Solution: Index (row-major-order) for video memory was incorrect. Logic for saving rows was also off, so changed that. Instead of starting from
+	  [Row-1, 0], index changed to [0, Row-1] while setting current_row = next_row.
+Time: ~2hrs
+
+10)
+Error: Can only read from terminal_read() once.
+Solution: added an enter_pressed flag. That way, the terminal knows when it should be reading keyboard inputs.
+Time: ~3hrs
+
+
+11)
+Error: Backspace is working internally (deleting characters from keyboard buffer works), but on the terminal screen, old values are not
+       being deleted. For example, 
+				On screen: "Hello<backspace pressed> World" = "Hello World"
+			        Expected on screen: "Hell World"
+				Call terminal_write(): "Hell World" <-- correct format off screen
+
+Solution: backspace logic was incorrect. When backspace is being handled, was printing a ' ' character then deleting that same ' ' character
+	  so previous characters weren't being deleted.
+Time: ~2hrs
+
+12)
+Error: Backspace edge case incorrectly handled. When we get to screen_x = NUM_COLS, screen_y is either getting set to the correct screen_y - 1, or
+       set to screen_y + 1 which is wrong.
+Solution: Had to fix up edge conditions to check for such cases.
+Time: ~1hr
+
+13)
+Type: Syntactic Semantic -Algorithmic Specific ambiguity
+Symptom: Trash values accessed by read_data_by_index
+Solution: Type casted addresses incorrectly
+Difficulty: HARD
+Time taken: 3 HOURS
+
+14)
+Type: Syntactic -Semantic Algorithmic Specific ambiguity
+Symptom: none of the string functions worked properly
+Solution: was passing the incorrect size as a parameter
+Difficulty: Medium
+Time taken: 10 mins
+
+15)
+Type: Syntactic Semantic -Algorithmic Specific ambiguity
+Symptom: dir_open would fail edge case
+Solution: Didn't account for edge case where file doesn't exist
+Difficulty: Easy
+Time taken: 5 mins
+
+16)
+Type: Syntactic Semantic -Algorithmic Specific ambiguity
+Symptom: Trash values accessed by read_data_by_name and read_data
+Solution: Incorrect offset was being used
+Difficulty: HARD
+Time taken: 1 HOUR
+
+17)
+Error: Page Faults whenever we tried to execute fish as vidmap was page faulting when calling execute fish
+Solution: We gdb'ed into fish setting breakpoints at vidmap, paging etc and stepped through the function when it was gdb-ing. We saw that
+it page faults after it has read all the data. Hence, we thought that our terminal_write must be wrong since it is not working as expected.
+However, all the other binaries like ls, counter etc were working despite calling terminal_write
+and hence we started checking paging when we realized that we have not given user_level privilege to user _level programs.
+Time: ~3hr
+
+18)
+Error: syserr always gave page_fault
+Solution: Seeing page_fault, we set breakpoints at our assembly_linkage function which called these using the jump_table to see if the correct
+values were being passed or not. After careful review, we observed that our stack kept on growing and on printing the contents of the pcb
+sometime in the future, we were getting garbage values. We thereby knew that our stack was being overwritten. To solve this, instead of copying the contents of the file together
+as a whole into a user-defined buffer size, we broke up the data and copied less amounts so that the local variables
+pushed on the stack will be less and we will not overwrite the stack.
+Time: ~5hr
+
+19) 
+Error: Page Faulting when exiting from the base shell (first process)
+Solution: We thought that the 'exit' function directly calls execute and hence were looking to step into that to see what was going wrong till
+we realized that it was directly calling halt and not removing its local registers from the stack. We then restarted shell from halt in the special
+case where exit was called from first process changing the processID cur_pcb pointer accordingly. 
+Time: ~3hr
+
+20)
+Error: Halting Gave Page Fault
+Solution: Due to some uncanny overview of stuff, we were not implementing and saving our parent pointer when we were trying halt from any executable/binary file from shell. As a 
+result after returning from halt to the parent execute process, the corresponding esp and ebp values were not being updated. Hence, we saved these values in the execute function and reloaded them before
+jumping from halt to execute thereby preserving and saving the stack.
+Time: ~2hrs
+
+21)
+Error: "shel" executing along with "shell"
+Solution: Although an easy bug to fix, our implementation to check for strlen (that you had given to us) was incorrect and hence it was executing incorrectly without giving any error.
+Only after looking through everything else and convincing ourselves that the stuff works, we were able to check and change the strlen function, make our own string length function that
+worked as we wanted it to work were we finally able to fix the error.
+Time: ~2hrs
+
+22)
+Type: Syntactic -Semantic Algorithmic Specific ambiguity
+Symptom: 'hello' wouldn't function properly, prints next shell string as well
+Solution: clearing the wrong keyboard buffer
+Difficulty: Medium
+Time taken: 10 mins
+
+23)
+Type: Syntactic -Semantic Algorithmic Specific ambiguity
+Symptom: page faults if we opened too many shells and tried to exit or even open a new terminal
+Solution: we forgot to handle the condition that max processes had reached and we are booting up new terminals
+Difficulty: Medium
+Time taken: 30 mins
+
+24)
+Type: Syntactic Semantic -Algorithmic Specific ambiguity
+Symptom: incorrect video memory (process) was printed onto screen
+Solution: paging was incorrect
+Difficulty: HARD
+Time taken: 2 DAYS
+
+25)
+Type: Syntactic Semantic Algorithmic -Specific ambiguity
+Symptom: fish was writing to all terminals when running on one
+Solution: added a garbage video memory space where garbage values can be stored, instead of printing it onto the screen
+Difficulty: HARD
+Time taken: 50 mins
+
