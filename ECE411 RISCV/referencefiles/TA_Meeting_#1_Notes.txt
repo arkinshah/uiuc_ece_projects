@@ -1,0 +1,7 @@
+Add adder in EXECUTE for JAL and BR (address calculation)
+Don't get too ambitous with branch prediction
+
+Advanced Features:
+	Array Multiplier
+	Basic Prefetching
+	Branch Prediction
